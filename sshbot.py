@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import optparse
 from pexpect import pxssh 
 
 class Client(object):
@@ -19,6 +18,9 @@ class Client(object):
             print(e)
             print("[-] Error Connecting")
     
+    def disconnect(self):
+        self.session.logout()
+
     def send_command(self, cmd):
         self.session.sendline(cmd)
         self.session.prompt()
