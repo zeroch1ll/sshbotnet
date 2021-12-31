@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-from os import error
 import requests
 import subprocess
 import time
@@ -10,7 +9,7 @@ def handle_command(cmd):
     """Takes a list of strings as argument and tries to run the command"""
     out = subprocess.run(cmd, text=True, capture_output=True)
     
-    if out.stderr != "": # if no error
+    if out.stderr == "": # if no error
         return out.stdout
     else:
         return "[-] Error: " + out.stderr
